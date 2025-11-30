@@ -216,7 +216,7 @@
 
     <input type="hidden" id="payment_method">
 
-    <button class="pay-btn" onclick="return openQRPopup()">Confirm & Pay</button>
+    <button class="pay-btn" onclick="return goToDetails()">Confirm & Pay</button>
 
     <a href="{% url 'home_buyer' %}" class="back-link" style="display:block;text-align:center;margin-top:1rem;">
       ← Back to Shop
@@ -226,58 +226,37 @@
 
 </div>
 
-<!-- POPUP MODAL -->
-<div id="qrModal" class="modal-overlay">
-  <div class="modal-box">
-    <h3 id="methodLabel"></h3>
-
-    <!-- Your QR image -->
-    <img src="{% static 'images/QR-Code.png' %}" alt="QR Code">
-
-    <p><strong>Reference #:</strong> <span id="refNumber"></span></p>
-    <p><strong>Amount:</strong> ₱{{ product.price }}</p>
-
-    <button class="close-btn" onclick="closeQR()">Close</button>
-    <button class="success-btn" onclick="goSuccess()">Pay</button>
-  </div>
-</div>
-
 <script>
 function selectPayment(method) {
   document.getElementById("payment_method").value = method;
 
-  document.querySelectorAll('.payment-card').forEach(c => c.classList.remove('selected'));
+  var cards = document.querySelectorAll('.payment-card');
+  for (var i = 0; i < cards.length; i++) {
+    cards[i].classList.remove('selected');
+  }
 
-  let selected = Array.from(document.querySelectorAll('.payment-card'))
-      .find(c => c.innerText.includes(method));
+  var selected = null;
+  for (var j = 0; j < cards.length; j++) {
+    if (cards[j].innerText && cards[j].innerText.indexOf(method) !== -1) {
+      selected = cards[j];
+      break;
+    }
+  }
 
-  if (selected) selected.classList.add('selected');
+  if (selected) {
+    selected.classList.add('selected');
+  }
 }
 
-function openQRPopup() {
-  let method = document.getElementById("payment_method").value;
-
+function goToDetails() {
+  var method = document.getElementById("payment_method").value;
   if (!method) {
     alert("Please choose a payment method.");
     return false;
   }
-
-  document.getElementById("methodLabel").innerText = "Pay with " + method;
-
-  // Generate reference #
-  document.getElementById("refNumber").innerText =
-    "REF-" + Math.floor(100000 + Math.random() * 900000);
-
-  document.getElementById("qrModal").style.display = "flex";
-  return false; // prevent page reload
-}
-
-function closeQR() {
-  document.getElementById("qrModal").style.display = "none";
-}
-
-function goSuccess() {
-    window.location.href = "{% url 'payment_success' %}";
+  var url = "{% url 'payment_details' product.id %}" + "?method=" + encodeURIComponent(method);
+  window.location.href = url;
+  return false;
 }
 </script>
 

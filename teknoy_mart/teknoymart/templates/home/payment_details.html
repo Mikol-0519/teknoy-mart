@@ -1,0 +1,169 @@
+{% extends "teknoymart/base.html" %}
+{% load static %}
+
+{% block title %}Payment Details | Teknoy Mart{% endblock %}
+
+{% block extra_css %}
+<style>
+  .buy-container {
+    max-width: 750px;
+    margin: 3rem auto;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    padding: 2rem;
+  }
+
+  .product-summary {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1.5rem;
+  }
+
+  .product-summary img {
+    width: 180px;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 1px solid #eee;
+  }
+
+  .product-info h2 {
+    margin: 0 0 0.5rem 0;
+  }
+
+  .product-info p {
+    margin: 0.3rem 0;
+    color: #666;
+  }
+
+  .product-info .price {
+    color: #c62828;
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 0.7rem;
+    margin: 0.5rem 0 1rem 0;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    box-sizing: border-box;
+  }
+
+  .form-control:focus {
+    outline: none;
+    border-color: #c62828;
+    box-shadow: 0 0 5px rgba(198, 40, 40, 0.3);
+  }
+
+  .form-control[readonly] {
+    background-color: #f5f5f5;
+    color: #999;
+  }
+
+  label {
+    display: block;
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.3rem;
+    color: #333;
+  }
+
+  .form-row {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .form-row > div {
+    flex: 1;
+  }
+
+  .pay-btn {
+    width: 100%;
+    background: #c62828;
+    color: white;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    border: none;
+    padding: 0.8rem;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+
+  .pay-btn:hover {
+    background: #a31e1e;
+  }
+
+  .back-link {
+    display: block;
+    text-align: center;
+    margin-top: 0.5rem;
+    color: #c62828;
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="buy-container">
+  <div class="product-summary">
+    {% if product.image %}
+    <img src="{{ product.image.url }}" alt="{{ product.title }}">
+    {% else %}
+    <img src="https://cdn-icons-png.flaticon.com/512/126/126477.png">
+    {% endif %}
+
+    <div class="product-info">
+      <h2>{{ product.title }}</h2>
+      <p>{{ product.description }}</p>
+      <p class="price">₱{{ product.price }}</p>
+    </div>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <h3 style="text-align:center; margin-top: 1.5rem;">Enter Payment Details</h3>
+
+    <label>Student ID (Username)</label>
+    <input type="text" name="student_id" value="{{ initial.student_id }}" readonly class="form-control" />
+
+    <label>Institutional Email</label>
+    <input type="email" name="email" value="{{ initial.email }}" class="form-control" required />
+
+    <div class="form-row">
+      <div>
+        <label>First Name</label>
+        <input type="text" name="first_name" value="{{ initial.first_name }}" class="form-control" required />
+      </div>
+      <div>
+        <label>Last Name</label>
+        <input type="text" name="last_name" value="{{ initial.last_name }}" class="form-control" required />
+      </div>
+    </div>
+
+    <label>Date of Birth</label>
+    <input type="date" name="dob" value="{{ initial.dob }}" class="form-control" />
+
+    <label>Phone Number</label>
+    <input type="tel" name="phone" value="{{ initial.phone }}" placeholder="e.g. +63 912 345 6789" class="form-control" />
+
+    <input type="hidden" name="payment_method" value="{{ initial.payment_method }}" />
+
+    <button type="submit" class="pay-btn">Proceed to QR Code</button>
+    <a href="{% url 'buy_now' product.id %}" class="back-link">← Back to Payment Method</a>
+  </form>
+</div>
+
+{% endblock %}

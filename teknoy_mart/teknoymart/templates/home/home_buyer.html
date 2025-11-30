@@ -90,8 +90,8 @@
         </div>
         <div class="meta">
           <p class="title">{{ product.title }}</p>
-          <a href="{% url 'chat_room' product.owner.id %}" class="btn btn-secondary" style="font-size: 0.8rem; margin-top: 5px;">Chat Seller</a>
           <p class="price">₱{{ product.price }}</p>
+          <a href="{% url 'chat_room' product.owner.id %}" class="btn btn-secondary" style="font-size: 0.8rem; margin-top: 5px;">Chat Seller</a>
           <a href="{% url 'buy_now' product.id %}"
              class="btn btn-primary"
              style="text-decoration: none;">Buy Now</a>

@@ -89,6 +89,8 @@ urlpatterns = [
     ),
 
     path("buy-now/<int:product_id>/", views.buy_now, name="buy_now"),
+    path("payment-details/<int:product_id>/", views.payment_details, name="payment_details"),
+    path("payment-qr/", views.payment_qr, name="payment_qr"),
     path("payment-success/", views.payment_success, name="payment_success"),
 
     # Buyer purchase

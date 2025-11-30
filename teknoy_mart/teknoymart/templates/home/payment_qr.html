@@ -1,0 +1,108 @@
+{% extends "teknoymart/base.html" %}
+{% load static %}
+
+{% block title %}Scan QR Code | Teknoy Mart{% endblock %}
+
+{% block extra_css %}
+<style>
+  .qr-container {
+    max-width: 600px;
+    margin: 3rem auto;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .qr-container h3 {
+    color: #333;
+    margin-bottom: 1.5rem;
+    font-size: 1.3rem;
+  }
+
+  .qr-code-box {
+    background: #f9f9f9;
+    border: 2px solid #eee;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+  }
+
+  .qr-code-box img {
+    width: 220px;
+    height: 220px;
+    object-fit: contain;
+  }
+
+  .transaction-info {
+    background: #f0f0f0;
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+    text-align: left;
+  }
+
+  .transaction-info div {
+    padding: 0.4rem 0;
+    font-size: 0.95rem;
+  }
+
+  .transaction-info strong {
+    color: #333;
+    display: inline-block;
+    width: 140px;
+  }
+
+  .transaction-info span {
+    color: #666;
+    font-family: monospace;
+    font-weight: 600;
+  }
+
+  .loading-text {
+    color: #666;
+    margin-top: 1.5rem;
+    font-size: 0.95rem;
+  }
+
+  .loading-text strong {
+    color: #c62828;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="qr-container">
+  {% if transaction %}
+    <h3>Pay with {{ transaction.get_payment_method_display|default:transaction.payment_method }}</h3>
+
+    <div class="qr-code-box">
+      <img src="{% static 'images/QR-Code.png' %}" alt="QR Code" />
+    </div>
+
+    <div class="transaction-info">
+      <div><strong>Reference #:</strong> <span>{{ transaction.reference_number }}</span></div>
+      <div><strong>Amount:</strong> <span>₱{{ transaction.amount }}</span></div>
+      <div><strong>Product:</strong> <span>{{ transaction.product.title }}</span></div>
+    </div>
+
+    <div class="loading-text">
+      <p><strong>Processing...</strong></p>
+      <p>Please scan the QR code with your payment app to complete the transaction.</p>
+    </div>
+
+    <script>
+      var redirectDelay = 8000;
+      setTimeout(function() {
+        var successUrl = "{% url 'payment_success' %}" + "?tx={{ transaction.id }}";
+        window.location.href = successUrl;
+      }, redirectDelay);
+    </script>
+  {% else %}
+    <p style="color: #c62828; font-weight: bold;">Transaction not found.</p>
+    <a href="{% url 'home_buyer' %}" class="back-link" style="display:block;text-align:center;margin-top:1rem;">← Back to Shop</a>
+  {% endif %}
+</div>
+
+{% endblock %}

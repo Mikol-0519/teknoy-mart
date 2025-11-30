@@ -8,11 +8,12 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.db import IntegrityError
 from .forms import ProductForm
-from .models import Product, Profile, UserPreferences, UserPrivacySettings
+from .models import Product, Profile, UserPreferences, UserPrivacySettings, Transaction
 from .models import Profile
 from django.http import HttpResponseForbidden
 from django.db.models import Q, Max
 from django.utils import timezone
+from django.urls import reverse
 from .models import Message
 
 
@@ -348,7 +349,80 @@ def buy_now(request, product_id):
 @login_required
 @role_required("buyer")
 def payment_success(request):
-    return render(request, "home/payment_success.html")
+    tx_id = request.GET.get("tx")
+    transaction = None
+    if tx_id:
+        try:
+            transaction = Transaction.objects.get(id=tx_id, buyer=request.user)
+            # If still pending, mark as PAID (simulated)
+            if transaction.status != "PAID":
+                transaction.status = "PAID"
+                transaction.paid_at = timezone.now()
+                transaction.save()
+        except Transaction.DoesNotExist:
+            transaction = None
+
+    return render(request, "home/payment_success.html", {"transaction": transaction})
+
+
+@login_required
+@role_required("buyer")
+def payment_details(request, product_id):
+    """Second page where buyer fills Student ID, institutional email, names, DOB, phone."""
+    product = get_object_or_404(Product, id=product_id)
+    method = request.GET.get("method", "")
+
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+
+    if request.method == "POST":
+        # Collect submitted values
+        student_id = request.POST.get("student_id") or request.user.username
+        email = request.POST.get("email") or request.user.email
+        first_name = request.POST.get("first_name") or request.user.first_name
+        last_name = request.POST.get("last_name") or request.user.last_name
+        dob = request.POST.get("dob") or profile.birth_date
+        phone = request.POST.get("phone") or ""
+
+        # Create a transaction (simulated)
+        ref = "REF-" + str(timezone.now().strftime("%Y%m%d%H%M%S"))[-12:]
+        tx = Transaction.objects.create(
+            buyer=request.user,
+            seller=product.owner,
+            product=product,
+            amount=product.price,
+            payment_method=(request.POST.get("payment_method") or method).upper(),
+            reference_number=ref,
+            status="PENDING",
+        )
+
+        return redirect(f"{reverse('payment_qr')}?tx={tx.id}")
+
+    # Pre-fill form from profile/user
+    initial = {
+        "student_id": request.user.username,
+        "email": request.user.email,
+        "first_name": request.user.first_name,
+        "last_name": request.user.last_name,
+        "dob": profile.birth_date or "",
+        "phone": "",
+        "payment_method": method,
+    }
+
+    return render(request, "home/payment_details.html", {"product": product, "initial": initial})
+
+
+@login_required
+@role_required("buyer")
+def payment_qr(request):
+    tx_id = request.GET.get("tx")
+    tx = None
+    if tx_id:
+        try:
+            tx = Transaction.objects.get(id=tx_id, buyer=request.user)
+        except Transaction.DoesNotExist:
+            tx = None
+
+    return render(request, "home/payment_qr.html", {"transaction": tx})
 
 
 # --------------- Settings Views for Seller----------------
